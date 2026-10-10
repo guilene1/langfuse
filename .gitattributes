@@ -1,0 +1,14 @@
+# core.autocrlf rewrites line endings in anything Git thinks is text. A PDF or a DOCX
+# containing the same bytes comes back corrupted, and the corruption only shows up when
+# somebody clones the repo on another machine and ingestion fails on their copy.
+*.pdf  binary
+*.docx binary
+
+# The text formats are checked out with the platform's own line endings
+*.md   text
+*.txt  text
+*.csv  text
+*.html text
+*.json text
+*.py   text
+*.yml  text

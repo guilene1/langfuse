@@ -1,0 +1,87 @@
+# The whole system on a laptop: PostgreSQL with pgvector, and the app.
+#
+#   cp .env.example .env          # put your ANTHROPIC_API_KEY in it
+#   docker compose up -d --build  # ingestion runs once, then the page starts
+#   open http://localhost:8501
+#
+# Two containers, not four. There is no separate vector database, and the page talks to the
+# Python directly: pgvector stores the chunks inside the same Postgres you already have.
+
+name: northwind-hr
+
+services:
+  # PostgreSQL with the pgvector extension compiled in.
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: hr_app
+      POSTGRES_PASSWORD: local_development_only
+      POSTGRES_DB: hr
+    ports:
+      # exposed, so you can psql in and look at the chunks yourself
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # The app must not start before Postgres is accepting connections
+      test: ["CMD-SHELL", "pg_isready -U hr_app -d hr"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Reads the documents, embeds them, fills the table. Runs once and exits.
+  ingest:
+    build: .
+    environment: &app-env
+      DATABASE_URL: postgresql://hr_app:local_development_only@postgres:5432/hr
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FASTEMBED_CACHE_PATH: /opt/models
+      # Langfuse runs as its own stack in langfuse/. Empty keys leave tracing off.
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-http://host.docker.internal:3000}
+    volumes:
+      - ./data:/app/data
+      # edit the code and rerun without rebuilding the image
+      - ./app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "app.ingest"]
+
+  # The chat page. Streamlit reloads it whenever a file in app/ changes.
+  app:
+    build: .
+    environment: *app-env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./app:/app/app
+    depends_on:
+      ingest:
+        condition: service_completed_successfully
+    command: ["streamlit", "run", "app/main.py",
+              "--server.address=0.0.0.0", "--server.port=8501"]
+
+  # JupyterLab for the Langfuse lab exercises. The same image and code as the app, so a
+  # notebook imports the real assistant rather than a copy of it. Open the link that
+  # `docker compose logs notebook` prints; it carries the login token.
+  notebook:
+    build: .
+    environment: *app-env
+    ports:
+      # localhost only: a notebook can run any code
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - ./data:/app/data
+      - ./app:/app/app
+      - ./notebooks:/app/notebooks
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser",
+              "--allow-root", "--ServerApp.root_dir=/app/notebooks"]
+
+volumes:
+  pgdata:

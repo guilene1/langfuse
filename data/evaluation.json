@@ -1,0 +1,278 @@
+[
+  {
+    "id": "pto-entitlement",
+    "trap": "none",
+    "question": "How many days of paid time off do I get each year?",
+    "must_contain": [
+      "25"
+    ],
+    "must_not_contain": [
+      "22"
+    ],
+    "why": "Straightforward lookup. 22 is the superseded figure and must not appear."
+  },
+  {
+    "id": "pto-after-five-years",
+    "trap": "none",
+    "question": "Does my holiday allowance go up with length of service?",
+    "must_contain": [
+      "28"
+    ],
+    "why": "25 days rising to 28 from the year after your fifth anniversary."
+  },
+  {
+    "id": "carryover-superseded",
+    "trap": "superseded version",
+    "question": "How many unused holiday days can I carry into next year, and when do they expire?",
+    "must_contain": [
+      "5",
+      "31 March"
+    ],
+    "must_not_contain": [
+      "10 days",
+      "30 June"
+    ],
+    "why": "The 2024 policy said 10 days by 30 June and is still in the corpus. Quoting it is the single most likely failure."
+  },
+  {
+    "id": "notice-for-long-leave",
+    "trap": "superseded version",
+    "question": "How far in advance do I need to request a two-week holiday?",
+    "must_contain": [
+      "three weeks",
+      "3 weeks"
+    ],
+    "any_of": true,
+    "must_not_contain": [
+      "two weeks ahead"
+    ],
+    "why": "v3 says three weeks; the superseded v2 said two."
+  },
+  {
+    "id": "parental-leave-unscoped",
+    "trap": "near-duplicate",
+    "question": "How long is parental leave?",
+    "must_contain": [
+      "16 weeks",
+      "26 weeks",
+      "3 years"
+    ],
+    "why": "Three national policies disagree, so the answer must give all three FIGURES - US 16 weeks, UK 26 weeks, Germany 3 years - not merely name the three countries. An earlier version accepted any country name and passed an answer that said the UK length was not in the documents."
+  },
+  {
+    "id": "parental-leave-uk",
+    "trap": "near-duplicate",
+    "question": "I work in the London office. How much maternity pay do I get?",
+    "must_contain": [
+      "26 weeks"
+    ],
+    "must_not_contain": [
+      "16 weeks"
+    ],
+    "why": "UK is 26 weeks at full pay. 16 weeks is the US number and would be a wrong-document retrieval."
+  },
+  {
+    "id": "parental-leave-us",
+    "trap": "near-duplicate",
+    "question": "As a primary caregiver in Austin, how much parental leave do I get?",
+    "must_contain": [
+      "16 weeks"
+    ],
+    "must_not_contain": [
+      "26 weeks"
+    ],
+    "why": "Mirror of the UK case, to catch retrieval that always returns the same national policy."
+  },
+  {
+    "id": "sick-pay-scoped",
+    "trap": "scoped exception",
+    "question": "How much sick pay do I get?",
+    "must_contain": [
+      "United States",
+      "United Kingdom",
+      "Germany",
+      "India",
+      "which country",
+      "depends"
+    ],
+    "any_of": true,
+    "why": "Four entities, four answers, all in one document. A flat single number is wrong."
+  },
+  {
+    "id": "sick-note-germany",
+    "trap": "scoped exception",
+    "question": "When do I need a doctor's note if I am off sick in Berlin?",
+    "must_contain": [
+      "fourth",
+      "4th"
+    ],
+    "any_of": true,
+    "why": "Fourth calendar day in Germany, and the manager may ask from day one."
+  },
+  {
+    "id": "juneteenth-table",
+    "trap": "table",
+    "question": "Is Juneteenth a company holiday?",
+    "must_contain": [
+      "19"
+    ],
+    "why": "Needs the right row out of the US holiday CSV: 2026-06-19."
+  },
+  {
+    "id": "boxing-day-table",
+    "trap": "table",
+    "question": "Is the London office closed for Boxing Day in 2026?",
+    "must_contain": [
+      "28"
+    ],
+    "why": "The UK calendar shows 28 December as the Boxing Day substitute."
+  },
+  {
+    "id": "gift-threshold",
+    "trap": "none",
+    "question": "A supplier offered me a 150 dollar gift. Can I accept it?",
+    "must_contain": [
+      "approval"
+    ],
+    "why": "Under 100 is fine, 100 to 250 needs manager approval and the gift register, above 250 is declined."
+  },
+  {
+    "id": "bereavement-parent",
+    "trap": "none",
+    "question": "How many days off do I get if a parent dies?",
+    "must_contain": [
+      "5",
+      "five"
+    ],
+    "any_of": true,
+    "why": "Five working days for a parent, ten for a partner or child."
+  },
+  {
+    "id": "jury-service",
+    "trap": "none",
+    "question": "Do I get paid while doing jury service?",
+    "must_contain": [
+      "paid",
+      "full"
+    ],
+    "any_of": true,
+    "why": "Full salary, no cap, and it does not come out of paid time off."
+  },
+  {
+    "id": "no-pet-insurance",
+    "trap": "not in corpus",
+    "question": "Does Northwind offer pet insurance?",
+    "must_contain": [
+      "hr-help@northwind.example",
+      "could not find",
+      "not",
+      "no information"
+    ],
+    "any_of": true,
+    "expect_no_sources": true,
+    "why": "Nothing in the corpus mentions pet insurance. Inventing one means the threshold is too low."
+  },
+  {
+    "id": "no-parking-policy",
+    "trap": "not in corpus",
+    "question": "Is there parking at the Berlin office?",
+    "must_contain": [
+      "hr-help@northwind.example",
+      "could not find",
+      "not",
+      "no information"
+    ],
+    "any_of": true,
+    "why": "No document covers facilities or parking."
+  },
+  {
+    "id": "personal-leave-balance",
+    "trap": "personal question",
+    "question": "How many holiday days do I have left this year?",
+    "must_contain": [
+      "Workday"
+    ],
+    "must_not_contain": [
+      "days left this year is",
+      "your remaining balance is"
+    ],
+    "why": "Retrieval succeeds and the model wants to help. Stating the policy entitlement is correct; claiming to know the remaining balance is not. So this asserts the disclaimer and the redirect, not the absence of a number - an earlier version banned the phrase 'you have' and failed a correct answer that said 'you have 25 days per year'.",
+    "must_disclaim": [
+      "cannot see",
+      "can't see",
+      "do not have access",
+      "unable to see"
+    ]
+  },
+  {
+    "id": "personal-review-date",
+    "trap": "personal question",
+    "question": "When is my next performance review?",
+    "must_contain": [
+      "hr-help@northwind.example",
+      "Workday",
+      "cannot",
+      "do not have access"
+    ],
+    "any_of": true,
+    "why": "No personal record exists. The assistant must say so rather than guess a date."
+  },
+  {
+    "id": "personal-claim-rejected",
+    "trap": "personal question",
+    "question": "Why was my expense claim rejected last month?",
+    "must_contain": [
+      "hr-help@northwind.example",
+      "cannot",
+      "do not have access"
+    ],
+    "any_of": true,
+    "why": "About one person's case. Nothing in a policy document can answer it."
+  },
+  {
+    "id": "small-talk",
+    "trap": "not in corpus",
+    "question": "hello",
+    "must_not_contain": [
+      "holiday",
+      "parental",
+      "sick pay"
+    ],
+    "expect_no_sources": true,
+    "why": "Vector search always returns its closest chunks. Without a relevance floor, small talk drags in a random policy."
+  },
+  {
+    "id": "follow-up-country",
+    "trap": "follow-up",
+    "after": [
+      "How much sick pay do I get?"
+    ],
+    "question": "what about in Berlin",
+    "must_contain": [
+      "6 weeks"
+    ],
+    "must_not_contain": [
+      "per night",
+      "per diem"
+    ],
+    "why": "A follow-up carries no topic of its own. Searched on its own, 'what about in Berlin' is a city name, and the travel expense policy wins. It has to be searched alongside the question that set the topic, and return German sick pay: 6 weeks of continued salary, then Krankengeld."
+  },
+  {
+    "id": "follow-up-after-follow-up",
+    "trap": "follow-up",
+    "after": [
+      "How much sick pay do I get?",
+      "why",
+      "what about in Berlin"
+    ],
+    "question": "and in London?",
+    "must_contain": [
+      "8 weeks"
+    ],
+    "must_not_contain": [
+      "per night",
+      "per diem"
+    ],
+    "why": "Three turns in, the question before this one is itself a follow-up. The topic is still sick pay, set at the start, so that is what this must attach to: UK company sick pay is 8 weeks at full salary."
+  }
+]

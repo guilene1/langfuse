@@ -1,0 +1,76 @@
+# Local changes to the official Langfuse compose file, for running next to the Northwind app.
+#
+# docker-compose.yml in this folder is the official file from Langfuse v4.56.0, unchanged, so
+# it can be replaced with a newer one without merging anything. Docker Compose reads this
+# override automatically when you run `docker compose` from this folder.
+#
+# The !override and !reset tags need Docker Compose 2.24.4 or later.
+
+# Its own project name, so these containers, volumes and network never mix with northwind-hr
+name: langfuse-lab
+
+services:
+  # Pin one exact version: Langfuse publishes a release almost every day, and the floating
+  # ":4" tag would give each student whatever was newest when they pulled it
+  langfuse-web:
+    image: docker.langfuse.com/langfuse/langfuse:${LANGFUSE_VERSION:-4.56.0}
+    ports: !override
+      # localhost only: the official file publishes 3000 on every network interface
+      - 127.0.0.1:3000:3000
+    # Healthy once the database migrations have run and the API answers. Next.js listens on the
+    # container's hostname, not on localhost, hence $HOSTNAME ($$ keeps it for the container).
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://$${HOSTNAME}:3000/api/public/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+    environment:
+      # Langfuse refuses webhook addresses inside private networks, to stop a webhook being used
+      # to reach internal systems. This lets exactly one host through: the local alert receiver.
+      # The web container checks it when a webhook is saved, the worker again when it sends.
+      LANGFUSE_WEBHOOK_WHITELISTED_HOST: alert-receiver
+
+  langfuse-worker:
+    image: docker.langfuse.com/langfuse/langfuse-worker:${LANGFUSE_VERSION:-4.56.0}
+    # On a first start the worker loads the model price table (used to calculate costs) once,
+    # at boot. Started alongside langfuse-web it ran before the web container had created the
+    # tables, failed, and never retried, so every cost showed $0. Waiting for web fixes that.
+    depends_on:
+      langfuse-web:
+        condition: service_healthy
+    environment:
+      LANGFUSE_WEBHOOK_WHITELISTED_HOST: alert-receiver
+
+  # Receives Langfuse's alert webhooks and shows them at http://localhost:8090, so the lab needs
+  # no Slack, email or public address. Langfuse sends to http://alert-receiver/langfuse: webhooks
+  # may only use port 80 or 443, so it listens on 80 inside Docker.
+  alert-receiver:
+    image: python:3.12.15-slim
+    restart: always
+    command: ["python", "-u", "/srv/receiver.py"]
+    volumes:
+      # The code and the webhook secret, read-only. The secret file is created during setup.
+      - ./alert-receiver:/srv:ro
+      - alert_receiver_data:/data
+    ports:
+      - 127.0.0.1:8090:80
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost/alerts.json', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  minio:
+    ports: !override
+      # localhost only, for the same reason as langfuse-web
+      - 127.0.0.1:9090:9000
+      - 127.0.0.1:9091:9001
+
+  postgres:
+    # No host port. The Northwind database already publishes 5432, and Langfuse reaches its
+    # own Postgres over the Docker network, so nothing on the host needs this one.
+    ports: !reset []
+
+volumes:
+  alert_receiver_data:

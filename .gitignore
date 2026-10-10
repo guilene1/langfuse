@@ -1,0 +1,15 @@
+# Secrets
+.env
+# The signing secret Langfuse shows once when a webhook automation is created
+langfuse/alert-receiver/webhook-secret
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Front end
+node_modules/
+frontend/dist/

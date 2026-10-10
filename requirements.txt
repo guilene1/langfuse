@@ -1,0 +1,24 @@
+# What the app needs to run.
+#
+# Exact versions: these are the ones the lab was tested with. Everything they pull in is pinned
+# too, in constraints.txt, so a rebuild next month installs the same thing.
+
+# Claude, with an API key
+anthropic==1.13.0
+
+# PostgreSQL with pgvector: the vector store
+psycopg[binary]==3.3.6
+
+# Reading the documents
+pypdf==6.20.0
+python-docx==1.2.0
+
+# Splitting text into chunks
+langchain-text-splitters==1.1.3
+
+# The web page
+streamlit==1.65.0
+
+# Tracing, datasets and scores in Langfuse. Inactive unless LANGFUSE_PUBLIC_KEY and
+# LANGFUSE_SECRET_KEY are set.
+langfuse==4.17.0
